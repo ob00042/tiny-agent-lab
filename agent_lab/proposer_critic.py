@@ -4,18 +4,8 @@ from agent_lab.models import Action
 from agent_lab.state import AgentState
 from agent_lab.domain import CANDIDATES, PREDICTED_SCORES, TARGET_SCORE
 from agent_lab.llm import LocalLLMClient
-
-
-@dataclass
-class Proposal:
-    action: Action
-    reason: str
-
-
-@dataclass
-class Critique:
-    accepted: bool
-    reason: str
+from agent_lab.decision_log import DecisionLog
+from agent_lab.decision_models import Proposal, Critique
 
 
 class Proposer:
@@ -78,6 +68,7 @@ def choose_approved_proposal(
     proposer: Proposer,
     critic: Critic,
     state: AgentState,
+    decision_log: DecisionLog,
     max_attempts: int = 3,
 ) -> Proposal:
     
@@ -86,6 +77,8 @@ def choose_approved_proposal(
     for _ in range(max_attempts):
         proposal = proposer.propose(state, feedback=feedback)
         critique = critic.evaluate(state=state, proposal=proposal)
+
+        decision_log.record(proposal=proposal, critique=critique)
 
         if critique.accepted:
             return proposal
@@ -114,7 +107,8 @@ PROPOSAL_SCHEMA = {
 }
 
 
-PROPOSER_SYSTEM_PROMPT = """
+PROPOSER_SYSTEM_PROMPTS = {
+    "v1": """
     You are the proposal component of a scientific agent.
 
     Your job is to choose exactly one compound to assay next.
@@ -126,14 +120,17 @@ PROPOSER_SYSTEM_PROMPT = """
     - Do not choose a compound that has already been tested.
     - Return only the requested structured output.
     """
+}
 
 
 class LLMProposer:
     def __init__(
         self,
         client: LocalLLMClient,
+        prompt_version: str,
     ) -> None:
         self.client = client
+        self.prompt_version = prompt_version
 
     def _build_state_prompt(
         self,
@@ -179,6 +176,10 @@ class LLMProposer:
 
                 Choose the next compound to assay.
                 """
+
+    @property
+    def system_prompt(self) -> str:
+        return PROPOSER_SYSTEM_PROMPTS[self.prompt_version]
     
     def propose(
         self,
@@ -189,7 +190,7 @@ class LLMProposer:
             messages=[
                 {
                     "role": "system",
-                    "content": PROPOSER_SYSTEM_PROMPT,
+                    "content": self.system_prompt,
                 },
                 {
                     "role": "user",

@@ -16,6 +16,10 @@ from agent_lab.planner import Planner, should_replan
 
 from agent_lab.control import should_escalate
 
+from agent_lab.config import AgentConfig
+
+from agent_lab.decision_log import DecisionLog
+
 
 def apply_observation(state: AgentState, action: Action, observation: Observation) -> None:
     if action.tool == "run_assay":
@@ -54,12 +58,15 @@ def apply_observation(state: AgentState, action: Action, observation: Observatio
 
 @dataclass
 class AgentRun:
+    config: AgentConfig
     state: AgentState
     memory: Memory
     trajectory: Trajectory
 
 
-def run_agent(proposer, critic) -> AgentRun:
+def run_agent(proposer, 
+             critic, 
+             config: AgentConfig) -> AgentRun:
     '''
     1. initialize state, memory, trajectory
 
@@ -80,7 +87,8 @@ def run_agent(proposer, critic) -> AgentRun:
     state = AgentState()
     memory = Memory()
     trajectory = Trajectory()
-    agent_run = AgentRun(state=state, memory=memory, trajectory=trajectory)
+    decision_log = DecisionLog()
+    agent_run = AgentRun(config=config, state=state, memory=memory, trajectory=trajectory)
     # proposer = Proposer()
     # critic = Critic()
 
@@ -90,7 +98,11 @@ def run_agent(proposer, critic) -> AgentRun:
     while state.finished == False:
 
         # compound = choose_next_compound(state=state)
-        proposal = choose_approved_proposal(proposer=proposer, critic=critic, state=state)
+        proposal = choose_approved_proposal(proposer=proposer, 
+                                            critic=critic, 
+                                            state=state, 
+                                            max_attempts=config.max_proposal_attempts,
+                                            decision_log=decision_log)
         if proposal is None:
             return agent_run
         compound = proposal.action.arguments["compound"]

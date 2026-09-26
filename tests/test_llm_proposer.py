@@ -1,5 +1,6 @@
 from agent_lab.proposer_critic import LLMProposer
 from agent_lab.state import AgentState
+from agent_lab.config import AgentConfig
 
 
 class FakeLLMClient:
@@ -17,8 +18,9 @@ class FakeLLMClient:
 def test_llm_proposer_builds_proposal():
     client = FakeLLMClient()
     state = AgentState()
+    config = AgentConfig()
 
-    llm_proposer = LLMProposer(client=client)
+    llm_proposer = LLMProposer(client=client, prompt_version=config.proposer_prompt_version)
 
     proposal = llm_proposer.propose(state=state)
 

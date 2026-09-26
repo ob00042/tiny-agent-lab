@@ -21,30 +21,21 @@ class LocalLLMClient:
     def __init__(
         self,
         base_url: str = "http://127.0.0.1:8080",
+        temperature: float = 0.0
     ) -> None:
         self.base_url = base_url
+        self.temperature = temperature
 
     def chat(
         self,
         messages: list[dict[str, str]],
     ) -> str:
-        '''
-        POST /v1/chat/completions
-
-        request:
-            messages
-            temperature = 0
-            max_tokens = 128
-
-        response:
-            choices[0].message.content
-        '''
 
         response = httpx.post(
             f"{self.base_url}/v1/chat/completions",
             json={
                 "messages": messages,
-                "temperature": 0,
+                "temperature": self.temperature,
                 "max_tokens": 128,
                 "chat_template_kwargs": {
                     "enable_thinking": False,
@@ -69,7 +60,7 @@ class LocalLLMClient:
             f"{self.base_url}/v1/chat/completions",
             json={
                 "messages": messages,
-                "temperature": 0,
+                "temperature": self.temperature,
                 "max_tokens": 128,
                 "chat_template_kwargs": {
                     "enable_thinking": False,

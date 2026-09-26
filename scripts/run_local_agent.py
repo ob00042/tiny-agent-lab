@@ -5,12 +5,14 @@ from agent_lab.proposer_critic import (
     Critic,
     LLMProposer,
 )
+from agent_lab.config import AgentConfig
 
-client = LocalLLMClient()
+config = AgentConfig()
+client = LocalLLMClient(temperature=config.temperature)
 critic = Critic()
-proposer = LLMProposer(client=client)
+proposer = LLMProposer(client=client, prompt_version=config.proposer_prompt_version)
 
-run = run_agent(proposer=proposer, critic=critic)
+run = run_agent(proposer=proposer, critic=critic, config=config)
 
 print("Finished:", run.state.finished)
 print(

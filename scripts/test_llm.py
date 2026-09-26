@@ -2,7 +2,7 @@
 from agent_lab.llm import LocalLLMClient
 
 
-client = LocalLLMClient()
+client = LocalLLMClient(temperature=0.0)
 
 response = client.chat(
     messages=[

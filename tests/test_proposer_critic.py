@@ -6,6 +6,7 @@ all attempts rejected
 from agent_lab.proposer_critic import Proposer, Critic, choose_approved_proposal, Proposal, Critique
 from agent_lab.state import AgentState
 from agent_lab.models import Action
+from agent_lab.decision_log import DecisionLog
 
 
 class FakeProposer:
@@ -41,8 +42,12 @@ def test_choose_approved_proposal_accept_immediately():
     proposer = FakeProposer()
     critic = AlwaysAcceptCritic()
     state = AgentState()
+    decision_log = DecisionLog()
 
-    proposal = choose_approved_proposal(proposer, critic, state)
+    proposal = choose_approved_proposal(proposer=proposer, 
+                                        critic=critic, 
+                                        state=state,
+                                        decision_log=decision_log)
 
     assert proposal is not None
     assert proposal.action.arguments["compound"] == "A"
@@ -73,8 +78,12 @@ def test_choose_approved_proposal_reject_once_then_accept():
     proposer = FakeProposer()
     critic = RejectOnceCritic()
     state = AgentState()
+    decision_log = DecisionLog()
 
-    proposal = choose_approved_proposal(proposer, critic, state)
+    proposal = choose_approved_proposal(proposer=proposer, 
+                                        critic=critic, 
+                                        state=state,
+                                        decision_log=decision_log)
 
     assert proposal is not None
     assert proposal.action.arguments["compound"] == "A"
@@ -99,8 +108,12 @@ def test_choose_approved_proposal_reject_all():
     proposer = FakeProposer()
     critic = RejectAllCritic()
     state = AgentState()
+    decision_log = DecisionLog()
 
-    proposal = choose_approved_proposal(proposer, critic, state)
+    proposal = choose_approved_proposal(proposer=proposer, 
+                                        critic=critic, 
+                                        state=state,
+                                        decision_log=decision_log)
 
     assert proposal is None
     assert proposer.calls == 3
@@ -127,10 +140,12 @@ def test_choose_approved_proposal_proposer_takes_feedback():
     proposer = FeedbackRecordingProposer()
     critic = RejectAllCritic()
     state = AgentState()
+    decision_log = DecisionLog()
 
-    proposal = choose_approved_proposal(proposer, critic, state)
-
-    print(proposer.feedback_received)
+    proposal = choose_approved_proposal(proposer=proposer, 
+                                        critic=critic, 
+                                        state=state, 
+                                        decision_log=decision_log)
 
     assert proposal is None
     assert len(proposer.feedback_received) == 3
