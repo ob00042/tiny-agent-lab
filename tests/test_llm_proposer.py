@@ -1,4 +1,4 @@
-from agent_lab.proposer_critic import LLMProposer, Proposal
+from agent_lab.proposer_critic import LLMProposer
 from agent_lab.state import AgentState
 
 

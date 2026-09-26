@@ -59,7 +59,7 @@ class AgentRun:
     trajectory: Trajectory
 
 
-def run_agent() -> AgentRun:
+def run_agent(proposer, critic) -> AgentRun:
     '''
     1. initialize state, memory, trajectory
 
@@ -81,8 +81,8 @@ def run_agent() -> AgentRun:
     memory = Memory()
     trajectory = Trajectory()
     agent_run = AgentRun(state=state, memory=memory, trajectory=trajectory)
-    proposer = Proposer()
-    critic = Critic()
+    # proposer = Proposer()
+    # critic = Critic()
 
     planner = Planner()
     plan = planner.create_plan() # fake plan, doesn't do anything

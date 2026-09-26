@@ -1,7 +1,10 @@
 from agent_lab.agent import run_agent
+from agent_lab.proposer_critic import Proposer, Critic
 
 def test_agent_finds_successful_compound():
-    run = run_agent()
+    proposer = Proposer()
+    critic = Critic()
+    run = run_agent(proposer=proposer, critic=critic)
 
     assert run.state.finished == True
     assert run.state.selected_compound == "B"
