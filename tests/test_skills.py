@@ -4,10 +4,9 @@ from agent_lab.state import AgentState
 from agent_lab.memory import Memory
 from agent_lab.trajectory import Trajectory
 
-CALL_COUNTS.clear()
-
 
 def test_investigate_compound_retries_transient_failure():
+    CALL_COUNTS.clear()
     state = AgentState()
     memory = Memory()
     trajectory = Trajectory()
@@ -28,6 +27,7 @@ def test_investigate_compound_retries_transient_failure():
 
 
 def test_investigate_compound_no_retries():
+    CALL_COUNTS.clear()
     state = AgentState()
     memory = Memory()
     trajectory = Trajectory()

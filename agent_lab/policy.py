@@ -1,6 +1,18 @@
 from agent_lab.models import Action
 from agent_lab.state import AgentState
 
+CANDIDATES = ["A", "B", "C"]
+
+
+def choose_next_compound(
+    state: AgentState,
+) -> str | None:
+    for compound in CANDIDATES:
+        if compound not in state.tested_compounds:
+            return compound
+
+    return None
+
 
 def choose_next_action(state: AgentState) -> Action | None:
     '''
