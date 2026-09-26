@@ -8,3 +8,4 @@ class AgentState:
     finished: bool = False
     selected_compound: str | None = None
     retry_counts: dict[str, int] = field(default_factory=dict)
+    requires_human: bool = False

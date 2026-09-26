@@ -11,6 +11,11 @@ from agent_lab.trajectory import Trajectory
 
 from agent_lab.proposer_critic import Proposer, Critic, choose_approved_proposal
 
+from agent_lab.reflection import reflect
+from agent_lab.planner import Planner, should_replan
+
+from agent_lab.control import should_escalate
+
 
 def apply_observation(state: AgentState, action: Action, observation: Observation) -> None:
     if action.tool == "run_assay":
@@ -79,6 +84,9 @@ def run_agent() -> AgentRun:
     proposer = Proposer()
     critic = Critic()
 
+    planner = Planner()
+    plan = planner.create_plan() # fake plan, doesn't do anything
+
     while state.finished == False:
 
         # compound = choose_next_compound(state=state)
@@ -95,6 +103,15 @@ def run_agent() -> AgentRun:
         if observation.success and observation.result > 0.75:
             state.finished = True
             state.selected_compound = compound
+
+        reflect(trajectory=trajectory, memory=memory)
+
+        if should_replan(observation):
+            plan = planner.create_plan() # fake plan, doesn't do anything
+
+        if should_escalate(state):
+            state.requires_human = True
+            break
 
     return agent_run
     
