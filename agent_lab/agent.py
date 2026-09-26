@@ -9,6 +9,8 @@ from agent_lab.memory import Memory
 from agent_lab.skills import investigate_compound
 from agent_lab.trajectory import Trajectory
 
+from agent_lab.proposer_critic import Proposer, Critic, choose_approved_proposal
+
 
 def apply_observation(state: AgentState, action: Action, observation: Observation) -> None:
     if action.tool == "run_assay":
@@ -74,10 +76,16 @@ def run_agent() -> AgentRun:
     memory = Memory()
     trajectory = Trajectory()
     agent_run = AgentRun(state=state, memory=memory, trajectory=trajectory)
+    proposer = Proposer()
+    critic = Critic()
 
     while state.finished == False:
 
-        compound = choose_next_compound(state=state)
+        # compound = choose_next_compound(state=state)
+        proposal = choose_approved_proposal(proposer=proposer, critic=critic, state=state)
+        if proposal is None:
+            return agent_run
+        compound = proposal.action.arguments["compound"]
 
         if compound is None:
             return agent_run
