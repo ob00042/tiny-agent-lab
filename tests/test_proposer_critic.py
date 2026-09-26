@@ -12,7 +12,7 @@ class FakeProposer:
     def __init__(self):
         self.calls = 0
 
-    def propose(self, state):
+    def propose(self, state, feedback=None):
         self.calls += 1
 
         return Proposal(
@@ -105,3 +105,33 @@ def test_choose_approved_proposal_reject_all():
     assert proposal is None
     assert proposer.calls == 3
     assert critic.calls == 3
+
+
+class FeedbackRecordingProposer:
+    def __init__(self):
+        self.feedback_received = []
+
+    def propose(self, state, feedback=None):
+        self.feedback_received.append(feedback)
+
+        return Proposal(
+            action=Action(
+                tool="run_assay",
+                arguments={"compound": "A"},
+            ),
+            reason="test",
+        )
+
+
+def test_choose_approved_proposal_proposer_takes_feedback():
+    proposer = FeedbackRecordingProposer()
+    critic = RejectAllCritic()
+    state = AgentState()
+
+    proposal = choose_approved_proposal(proposer, critic, state)
+
+    print(proposer.feedback_received)
+
+    assert proposal is None
+    assert len(proposer.feedback_received) == 3
+    assert proposer.feedback_received == [None, "failed", "failed"]

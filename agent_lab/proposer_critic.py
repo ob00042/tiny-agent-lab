@@ -22,6 +22,7 @@ class Proposer:
     def propose(
         self,
         state: AgentState,
+        feedback: str | None = None,
     ) -> Proposal:
         '''
         look at candidates
@@ -79,19 +80,19 @@ def choose_approved_proposal(
     state: AgentState,
     max_attempts: int = 3,
 ) -> Proposal:
-    '''
-    propose
-    ↓
-    critic
-    ├── accept → return proposal
-    └── reject → ask proposer again
-    '''
+    
+    feedback = None
+
     for _ in range(max_attempts):
-        proposal = proposer.propose(state)
+        proposal = proposer.propose(state, feedback=feedback)
         critique = critic.evaluate(state=state, proposal=proposal)
+
         if critique.accepted:
             return proposal
-        continue
+        
+        feedback = critique.reason
+    
+    # raise RuntimeError("No proposal was accepted")
 
 
 PROPOSAL_SCHEMA = {
@@ -137,6 +138,7 @@ class LLMProposer:
     def _build_state_prompt(
         self,
         state: AgentState,
+        feedback: str | None = None,
     ) -> str:
         predictions = "\n".join(
             f"{compound}: {PREDICTED_SCORES[compound]}"
@@ -152,6 +154,18 @@ class LLMProposer:
         else:
             tested = "None"
 
+        if feedback:
+            feedback_section = f"""
+            The previous proposal was rejected.
+
+            Critic feedback:
+            {feedback}
+
+            Choose a different valid action that addresses this feedback.
+            """
+        else:
+            feedback_section = ""
+
         return f"""
                 Target assay score: {TARGET_SCORE}
 
@@ -161,12 +175,15 @@ class LLMProposer:
                 Already tested compounds and observed results:
                 {tested}
 
+                {feedback_section}
+
                 Choose the next compound to assay.
                 """
     
     def propose(
         self,
         state: AgentState,
+        feedback: str | None = None,
     ) -> Proposal:
         response = self.client.chat_json(
             messages=[
@@ -176,7 +193,7 @@ class LLMProposer:
                 },
                 {
                     "role": "user",
-                    "content": self._build_state_prompt(state),
+                    "content": self._build_state_prompt(state=state, feedback=feedback),
                 },
             ],
             schema=PROPOSAL_SCHEMA,
