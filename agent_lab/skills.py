@@ -1,0 +1,30 @@
+from agent_lab.tools import execute_tool
+from agent_lab.agent import AgentState, Observation
+from agent_lab.memory import Memory
+from agent_lab.models import Action, Observation
+
+
+def investigate_compound(
+    compound: str,
+    state: AgentState,
+    memory: Memory,
+) -> Observation:
+    
+    if compound in state.tested_compounds:
+        return Observation(success=True, result=state.tested_compounds[compound])
+
+    action = Action(tool="run_assay", arguments={"compound": compound})
+
+    observation = execute_tool(action)
+
+    if observation.success:
+        state.tested_compounds[compound] = observation.result
+
+        memory.add(
+            kind="assay_result",
+            content=f"{compound}: {observation.result}",
+        )
+
+    return observation
+
+    
