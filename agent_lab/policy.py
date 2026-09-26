@@ -1,7 +1,6 @@
 from agent_lab.models import Action
 from agent_lab.state import AgentState
-
-CANDIDATES = ["A", "B", "C"]
+from agent_lab.domain import CANDIDATES
 
 
 def choose_next_compound(
@@ -22,7 +21,7 @@ def choose_next_action(state: AgentState) -> Action | None:
     else if C untested → test C
     else → no action
     '''
-    for compound in ["A", "B", "C"]:
+    for compound in CANDIDATES:
         if compound not in state.tested_compounds:
             return Action(tool="run_assay", arguments={"compound": compound})
     return None

@@ -2,9 +2,8 @@ from dataclasses import dataclass
 
 from agent_lab.models import Action
 from agent_lab.state import AgentState
-
-
-CANDIDATES = ["A", "B", "C"]
+from agent_lab.domain import CANDIDATES, PREDICTED_SCORES, TARGET_SCORE
+from agent_lab.llm import LocalLLMClient
 
 
 @dataclass
@@ -93,3 +92,102 @@ def choose_approved_proposal(
         if critique.accepted:
             return proposal
         continue
+
+
+PROPOSAL_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "compound": {
+            "type": "string",
+            "enum": ["A", "B", "C"],
+        },
+        "reason": {
+            "type": "string",
+        },
+    },
+    "required": [
+        "compound",
+        "reason",
+    ],
+    "additionalProperties": False,
+}
+
+
+PROPOSER_SYSTEM_PROMPT = """
+    You are the proposal component of a scientific agent.
+
+    Your job is to choose exactly one compound to assay next.
+
+    Rules:
+    - Only choose A, B, or C.
+    - Prefer candidates whose predicted score suggests they may reach the target.
+    - Never treat predicted scores as experimental results.
+    - Do not choose a compound that has already been tested.
+    - Return only the requested structured output.
+    """
+
+
+class LLMProposer:
+    def __init__(
+        self,
+        client: LocalLLMClient,
+    ) -> None:
+        self.client = client
+
+    def _build_state_prompt(
+        self,
+        state: AgentState,
+    ) -> str:
+        predictions = "\n".join(
+            f"{compound}: {PREDICTED_SCORES[compound]}"
+            for compound in CANDIDATES
+        )
+
+        if state.tested_compounds:
+            tested = "\n".join(
+                f"{compound}: {score}"
+                for compound, score
+                in state.tested_compounds.items()
+            )
+        else:
+            tested = "None"
+
+        return f"""
+                Target assay score: {TARGET_SCORE}
+
+                Predicted scores:
+                {predictions}
+
+                Already tested compounds and observed results:
+                {tested}
+
+                Choose the next compound to assay.
+                """
+    
+    def propose(
+        self,
+        state: AgentState,
+    ) -> Proposal:
+        response = self.client.chat_json(
+            messages=[
+                {
+                    "role": "system",
+                    "content": PROPOSER_SYSTEM_PROMPT,
+                },
+                {
+                    "role": "user",
+                    "content": self._build_state_prompt(state),
+                },
+            ],
+            schema=PROPOSAL_SCHEMA,
+        )
+
+        return Proposal(
+            action=Action(
+                tool="run_assay",
+                arguments={
+                    "compound": response["compound"],
+                },
+            ),
+            reason=response["reason"],
+        )
