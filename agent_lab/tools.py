@@ -6,6 +6,8 @@ COMPOUNDS = {
     "C": 0.63,
 }
 
+CALL_COUNTS: dict[str, int] = {}
+
 
 def run_assay(compound: str) -> float:
     '''
@@ -15,6 +17,10 @@ def run_assay(compound: str) -> float:
     '''
     if compound not in COMPOUNDS:
         raise ValueError(f"Unknown compound: {compound}")
+
+    CALL_COUNTS[compound] = CALL_COUNTS.get(compound, 0) + 1
+    if compound == "C" and CALL_COUNTS[compound] == 1:
+        raise RuntimeError("Instrument timeout")
 
     return COMPOUNDS[compound]
 

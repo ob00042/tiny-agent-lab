@@ -7,3 +7,4 @@ class AgentState:
     current_compound: str | None = None
     finished: bool = False
     selected_compound: str | None = None
+    retry_counts: dict[str, int] = field(default_factory=dict)

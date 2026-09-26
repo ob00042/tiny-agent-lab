@@ -4,6 +4,8 @@ from agent_lab.memory import Memory
 from agent_lab.models import Action, Observation
 
 
+MAX_RETRIES = 1
+
 def investigate_compound(
     compound: str,
     state: AgentState,
@@ -24,6 +26,9 @@ def investigate_compound(
             kind="assay_result",
             content=f"{compound}: {observation.result}",
         )
+    else:
+        state.retry_counts[compound] = state.retry_counts.get(compound, 0) + 1
+        return investigate_compound(compound, state, memory)
 
     return observation
 
