@@ -1,0 +1,9 @@
+{
+  "version": "v1",
+  "cases": [
+    {
+      "id": "basic_success",
+      "expected_compound": "B"
+    }
+  ]
+}

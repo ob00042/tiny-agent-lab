@@ -1,0 +1,13 @@
+{
+  "version": "v2",
+  "cases": [
+    {
+      "id": "basic_success",
+      "expected_compound": "B"
+    },
+    {
+      "id": "transient_timeout",
+      "expected_recovery": true
+    }
+  ]
+}

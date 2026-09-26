@@ -1,0 +1,107 @@
+'''
+accepted immediately
+rejected once then accepted
+all attempts rejected
+'''
+from agent_lab.proposer_critic import Proposer, Critic, choose_approved_proposal, Proposal, Critique
+from agent_lab.state import AgentState
+from agent_lab.models import Action
+
+
+class FakeProposer:
+    def __init__(self):
+        self.calls = 0
+
+    def propose(self, state):
+        self.calls += 1
+
+        return Proposal(
+            action=Action(
+                tool="run_assay",
+                arguments={"compound": "A"},
+            ),
+            reason="test",
+        )
+
+
+class AlwaysAcceptCritic:
+    def __init__(self):
+        self.calls = 0
+
+    def evaluate(self, state, proposal):
+        self.calls += 1
+
+        return Critique(
+            accepted=True,
+            reason="accepted",
+        )
+
+
+def test_choose_approved_proposal_accept_immediately():
+    proposer = FakeProposer()
+    critic = AlwaysAcceptCritic()
+    state = AgentState()
+
+    proposal = choose_approved_proposal(proposer, critic, state)
+
+    assert proposal is not None
+    assert proposal.action.arguments["compound"] == "A"
+    assert proposer.calls == 1
+    assert critic.calls == 1
+
+
+class RejectOnceCritic:
+    def __init__(self):
+        self.calls = 0
+
+    def evaluate(self, state, proposal):
+        self.calls += 1
+
+        if self.calls == 1:
+            return Critique(
+                accepted=False,
+                reason="failed"
+            )
+
+        return Critique(
+            accepted=True,
+            reason="accepted",
+        )
+
+
+def test_choose_approved_proposal_reject_once_then_accept():
+    proposer = FakeProposer()
+    critic = RejectOnceCritic()
+    state = AgentState()
+
+    proposal = choose_approved_proposal(proposer, critic, state)
+
+    assert proposal is not None
+    assert proposal.action.arguments["compound"] == "A"
+    assert proposer.calls == 2
+    assert critic.calls == 2
+
+
+class RejectAllCritic():
+    def __init__(self):
+        self.calls = 0
+
+    def evaluate(self, state, proposal):
+        self.calls += 1
+
+        return Critique(
+            accepted=False,
+            reason="failed"
+        )
+
+
+def test_choose_approved_proposal_reject_all():
+    proposer = FakeProposer()
+    critic = RejectAllCritic()
+    state = AgentState()
+
+    proposal = choose_approved_proposal(proposer, critic, state)
+
+    assert proposal is None
+    assert proposer.calls == 3
+    assert critic.calls == 3
