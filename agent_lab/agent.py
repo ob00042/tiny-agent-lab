@@ -11,7 +11,7 @@ from agent_lab.trajectory import Trajectory
 
 from agent_lab.proposer_critic import Proposer, Critic, choose_approved_proposal
 
-from agent_lab.reflection import reflect
+from agent_lab.reflection import reflect, LLMReflector
 from agent_lab.planner import Planner, should_replan
 
 from agent_lab.control import should_escalate
@@ -19,6 +19,8 @@ from agent_lab.control import should_escalate
 from agent_lab.config import AgentConfig
 
 from agent_lab.decision_log import DecisionLog
+
+from agent_lab.llm import LocalLLMClient
 
 
 def apply_observation(state: AgentState, action: Action, observation: Observation) -> None:
@@ -95,6 +97,9 @@ def run_agent(proposer,
     planner = Planner()
     plan = planner.create_plan() # fake plan, doesn't do anything
 
+    client = LocalLLMClient(0)
+    reflector = LLMReflector(client=client, prompt_version=config.reflection_prompt_version)
+
     while state.finished == False:
 
         # compound = choose_next_compound(state=state)
@@ -116,7 +121,11 @@ def run_agent(proposer,
             state.finished = True
             state.selected_compound = compound
 
-        reflect(trajectory=trajectory, memory=memory)
+        # reflection = reflect(trajectory=trajectory, memory=memory)
+
+        if not observation.success:
+            reflection = reflector.reflect(trajectory=trajectory, memory=memory)
+
 
         if should_replan(observation):
             plan = planner.create_plan() # fake plan, doesn't do anything

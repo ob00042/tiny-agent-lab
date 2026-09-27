@@ -27,3 +27,7 @@ print(
     "Trajectory steps:",
     len(run.trajectory.steps),
 )
+print(
+    "Memory:",
+    run.memory
+)

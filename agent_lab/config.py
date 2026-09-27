@@ -7,3 +7,4 @@ class AgentConfig:
     proposer_prompt_version: str = "v1"
     temperature: float = 0.0
     max_proposal_attempts: int = 3
+    reflection_prompt_version: str = "v1"
