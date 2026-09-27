@@ -68,7 +68,8 @@ class AgentRun:
 
 def run_agent(proposer, 
              critic, 
-             config: AgentConfig) -> AgentRun:
+             config: AgentConfig,
+             client: LocalLLMClient) -> AgentRun:
     '''
     1. initialize state, memory, trajectory
 
@@ -97,7 +98,6 @@ def run_agent(proposer,
     planner = Planner()
     plan = planner.create_plan() # fake plan, doesn't do anything
 
-    client = LocalLLMClient(0)
     reflector = LLMReflector(client=client, prompt_version=config.reflection_prompt_version)
 
     while state.finished == False:

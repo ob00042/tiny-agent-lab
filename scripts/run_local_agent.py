@@ -12,7 +12,7 @@ client = LocalLLMClient(temperature=config.temperature)
 critic = Critic()
 proposer = LLMProposer(client=client, prompt_version=config.proposer_prompt_version)
 
-run = run_agent(proposer=proposer, critic=critic, config=config)
+run = run_agent(proposer=proposer, critic=critic, config=config, client=client)
 
 print("Finished:", run.state.finished)
 print(
